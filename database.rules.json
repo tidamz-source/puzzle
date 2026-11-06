@@ -1,0 +1,32 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "admins": {
+      ".read": false,
+      ".write": false
+    },
+
+    "teams": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).exists()",
+      ".write": "auth != null && root.child('admins').child(auth.uid).exists()",
+      "$code": {
+        ".read": true
+      }
+    },
+
+    "entries": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).exists()",
+      ".write": "auth != null && root.child('admins').child(auth.uid).exists()",
+      "$code": {
+        "$entryId": {
+          ".write": "!data.exists() && root.child('teams').child($code).exists()",
+          ".validate": "newData.hasChildren(['ts']) && newData.child('ts').val() === now",
+          "ts": { ".validate": true },
+          "$other": { ".validate": false }
+        }
+      }
+    }
+  }
+}

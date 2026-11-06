@@ -1,0 +1,11 @@
+{
+  "admins": {
+    "REMPLACE_PAR_TON_UID": true
+  },
+  "teams": {
+    "5093911179": { "name": "Équipe Rouge", "color": "#ff5c5c" },
+    "9689174491": { "name": "Équipe Bleue", "color": "#4da3ff" },
+    "9453665102": { "name": "Équipe Verte", "color": "#3ddc97" },
+    "0635812064": { "name": "Équipe Jaune", "color": "#ffcc33" }
+  }
+}
