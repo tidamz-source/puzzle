@@ -19,7 +19,7 @@ const SHEET_NAME = 'Participations';
 
 function doGet(e) {
   const isAdmin = e && e.parameter && e.parameter.admin === ADMIN_KEY;
-  return HtmlService.createHtmlOutputFromFile(isAdmin ? 'Admin' : 'Joueur')
+  return HtmlService.createHtmlOutputFromFile(isAdmin ? 'Admin' : 'index')
     .setTitle(isAdmin ? 'Classement' : 'Code secret')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover');
 }

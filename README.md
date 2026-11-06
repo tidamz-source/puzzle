@@ -5,7 +5,7 @@ Tout tourne dans un Google Sheet avec Apps Script : pas de serveur, pas de compt
 ## Fichiers
 
 - `Code.gs` : la logique (vérification des codes, enregistrement, classement)
-- `Joueur.html` : page de saisie du code
+- `index.html` : page de saisie du code
 - `Admin.html` : back-office avec le classement en direct
 
 ## Les codes
@@ -21,10 +21,10 @@ Pour les modifier : bloc `TEAMS` en haut de `Code.gs`.
 
 ## Déploiement (10 min)
 
-1. Crée un Google Sheet vide (sheets.new).
+1. Ouvre le Google Sheet `jeu_puzzle`.
 2. Menu **Extensions > Apps Script**.
 3. Remplace le contenu de `Code.gs` par celui du fichier `Code.gs`.
-4. Clique sur **+** à côté de *Fichiers* > **HTML**, nomme-le exactement `Joueur` et colle `Joueur.html`. Pareil avec `Admin` et `Admin.html`.
+4. Clique sur **+** à côté de *Fichiers* > **HTML**, nomme-le exactement `index` et colle `index.html`. Pareil avec `Admin` et `Admin.html`.
 5. Enregistre (icône disquette).
 6. **Déployer > Nouveau déploiement** > roue dentée > **Application Web** :
    - Exécuter en tant que : **Moi**
