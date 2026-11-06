@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Code secret</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #111014; --panel: #1c1a22; --ink: #f4f1ea; --muted: #8d8899;
+    --accent: #ffcc33; --ok: #3ddc97; --ko: #ff5c5c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: "Space Grotesk", system-ui, sans-serif;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px 16px;
+    background-image:
+      radial-gradient(circle at 15% 10%, #2a2533 0, transparent 40%),
+      radial-gradient(circle at 90% 90%, #2b2218 0, transparent 40%);
+  }
+  main { width: 100%; max-width: 420px; text-align: center; }
+  .eyebrow { font-size: 13px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+  h1 { font-size: clamp(30px, 9vw, 42px); line-height: 1.05; margin-bottom: 10px; }
+  p.lead { color: var(--muted); font-size: 16px; margin-bottom: 32px; }
+  form { display: flex; flex-direction: column; gap: 14px; }
+  input {
+    width: 100%; background: var(--panel); border: 2px solid #2e2b36; border-radius: 16px;
+    color: var(--ink); font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: clamp(22px, 7vw, 30px); letter-spacing: .18em; text-align: center;
+    padding: 20px 12px; outline: none; transition: border-color .15s;
+  }
+  input:focus { border-color: var(--accent); }
+  input::placeholder { color: #4a4555; }
+  .btn {
+    display: block; width: 100%;
+    background: var(--accent); color: #111014; border: 0; border-radius: 16px;
+    font: 700 18px "Space Grotesk", sans-serif; padding: 18px; cursor: pointer;
+    text-decoration: none; transition: transform .1s, opacity .15s;
+  }
+  .btn:active { transform: scale(.98); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .msg { min-height: 56px; margin-top: 22px; font-size: 17px; color: var(--ko); }
+  .shake { animation: shake .4s; }
+  @keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+
+  .step { display: none; animation: pop .35s ease-out; }
+  .step.on { display: block; }
+  @keyframes pop { from { transform: scale(.94); opacity: 0; } }
+  .check {
+    width: 96px; height: 96px; border-radius: 50%; margin: 0 auto 24px;
+    display: grid; place-items: center; background: var(--team, var(--ok));
+    color: #111014; font-size: 48px; font-weight: 700;
+  }
+  .team {
+    display: inline-block; margin: 6px 0 28px; padding: 8px 16px; border-radius: 999px;
+    border: 2px solid var(--team, var(--ok)); color: var(--team, var(--ok)); font-weight: 700;
+  }
+  .note { color: var(--muted); font-size: 14px; margin-top: 16px; }
+</style>
+</head>
+<body>
+<main>
+  <!-- 1. Saisie -->
+  <section id="s1" class="step on">
+    <div class="eyebrow">Mission puzzle</div>
+    <h1>Entrez votre code</h1>
+    <p class="lead">La suite de chiffres inscrite au dos de votre puzzle.</p>
+    <form id="form" autocomplete="off">
+      <input id="code" inputmode="numeric" placeholder="··········" aria-label="Code" required>
+      <button id="btn" class="btn" type="submit">Valider</button>
+    </form>
+    <div id="msg" class="msg" role="status"></div>
+  </section>
+
+  <!-- 2. Confirmation -->
+  <section id="s2" class="step">
+    <div class="check">✓</div>
+    <h1>Participation prise en compte</h1>
+    <div class="team team-name"></div>
+  </section>
+</main>
+
+<script>
+  // ===== À PERSONNALISER =====
+  // Colle ici l'URL de l'application Web Apps Script (elle finit par /exec)
+  var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxFVkXIMwlYm8WeVjMfFqId23mqAO72vHk-OedFEY2HAdX1BfWDv4PNamNTxu2Hbg55jw/exec';
+  // ===========================
+
+  var COLORS = { Rouge: '#ff5c5c', Bleue: '#4da3ff', Verte: '#3ddc97', Jaune: '#ffcc33' };
+
+  var $ = function (id) { return document.getElementById(id); };
+  var input = $('code'), btn = $('btn'), msg = $('msg');
+
+  function show(id) {
+    ['s1', 's2'].forEach(function (s) { $(s).classList.toggle('on', s === id); });
+  }
+
+  // Anti-devinette : attente croissante après chaque erreur
+  var store = {
+    get: function (k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+  var lock = store.get('lock') || { fails: 0, until: 0 };
+  var timer = null;
+  function refreshLock() {
+    clearInterval(timer);
+    function tick() {
+      var left = Math.ceil((lock.until - Date.now()) / 1000);
+      if (left > 0) { btn.disabled = true; btn.textContent = 'Patientez ' + left + ' s'; }
+      else { clearInterval(timer); btn.disabled = false; btn.textContent = 'Valider'; }
+    }
+    tick();
+    timer = setInterval(tick, 250);
+  }
+  refreshLock();
+
+  function fail() {
+    lock.fails += 1;
+    lock.until = Date.now() + Math.min(5 * Math.pow(2, lock.fails - 1), 60) * 1000; // 5 s, 10 s, 20 s… 60 s
+    store.set('lock', lock);
+    msg.textContent = 'Code incorrect.';
+    input.classList.remove('shake'); void input.offsetWidth; input.classList.add('shake');
+    refreshLock();
+  }
+
+  $('form').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    if (btn.disabled) return;
+    var code = input.value.replace(/\D/g, '');
+    if (!code) return;
+    msg.textContent = '';
+    btn.disabled = true;
+    btn.textContent = 'Vérification…';
+
+    var res;
+    try {
+      // Envoi en texte brut : pas de blocage CORS avec Apps Script
+      var r = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ code: code }) });
+      res = await r.json();
+    } catch (err) {
+      msg.textContent = 'Connexion impossible, réessayez.';
+      refreshLock();
+      return;
+    }
+
+    if (!res.ok) { fail(); return; }
+
+    lock = { fails: 0, until: 0 };
+    store.set('lock', lock);
+    document.querySelectorAll('.team-name').forEach(function (el) { el.textContent = 'Équipe ' + res.team; });
+    document.documentElement.style.setProperty('--team', COLORS[res.team] || '#3ddc97');
+    show('s2');
+  });
+</script>
+</body>
+</html>
